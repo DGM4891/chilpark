@@ -155,21 +155,12 @@ El diseño seguirá principios de:
 
 A continuación se presentan los primeros wireframes del proyecto. Estas imágenes están versionadas en el repositorio dentro de la carpeta `wireframe/` y se referencian con rutas relativas para que se vean correctamente en GitHub.
 
-![Login](wireframe/login-phone.png)
+![Login](wireframe/LOGINPHONE.png)
 
-![Recuperación de contraseña](wireframe/login-recuperacion-de-contrasena.png)
+![Recuperación de contraseña](wireframe/LOGINRECUPERACION.png)
 
-![Dashboard - Parámetros](wireframe/dashboard-parametros-phone.png)
+![Dashboard - Parámetros](wireframe/DASHBOARD.png)
 
-Nota: Para mostrarlas también en la Wiki de GitHub, usa la URL cruda (raw) de cada imagen, por ejemplo:
-
-```
-![Login](https://raw.githubusercontent.com/DGM4891/chilpark/main/wireframe/login-phone.png)
-![Recuperación de contraseña](https://raw.githubusercontent.com/DGM4891/chilpark/main/wireframe/login-recuperacion-de-contrasena.png)
-![Dashboard - Parámetros](https://raw.githubusercontent.com/DGM4891/chilpark/main/wireframe/dashboard-parametros-phone.png)
-```
-
-De esta forma, los recursos se renderizan correctamente en las páginas de la Wiki, que utilizan un repositorio separado.
 
 ---
 
