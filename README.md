@@ -12,6 +12,8 @@
 
 Aplicación móvil para Android desarrollada en React Native que digitaliza y automatiza la gestión integral de parqueaderos. La solución contempla dos interfaces principales: una aplicación para usuarios finales que permite la búsqueda de parqueaderos disponibles, el registro de vehículos y la gestión de pagos; y un panel administrativo web que facilita el control operativo, la configuración de tarifas, el monitoreo en tiempo real y la generación de reportes analíticos.
 
+Este proyecto será construido con React Native y Expo para facilitar el desarrollo, pruebas y despliegue multiplataforma.
+
 ---
 
 ## 🎯 Objetivos
@@ -43,6 +45,7 @@ Esta problemática se agudiza en zonas de alta densidad urbana donde la disponib
 
 ### Frontend (Aplicación Móvil)
 - **React Native** 0.72+
+- **Expo** (workflow gestionado) para desarrollo, compilación y despliegue
 - **Redux** para gestión de estado
 - **React Navigation** para navegación entre pantallas
 - **React Native Maps** para visualización de ubicaciones
