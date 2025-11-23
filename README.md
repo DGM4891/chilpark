@@ -162,8 +162,13 @@ A continuación se presentan los primeros wireframes del proyecto. Estas imágen
 
 ![Recuperación de contraseña](wireframe/LOGINRECUPERACION.png)
 
-![Dashboard - Parámetros](wireframe/DASHBOARD.png)
+![Menú principal](wireframe/MENUPRINCIPAL.png)
 
+![Cerrar sesión](wireframe/LOGOUT.png)
+
+![Precio en tiempo real](wireframe/PRECIOHORA.png)
+
+![Como llegar](wireframe/COMOLLEGAR.png)
 
 ---
 
@@ -341,6 +346,152 @@ Para consultas sobre el proyecto:
 
 ---
 
-**Última actualización**: 25 de octubre de 2025
+**Última actualización**: 23 de noviembre de 2025
 
-**Estado del proyecto**: 🔧 En desarrollo - Fase de diseño y planificación (Módulo 1)
+**Estado del proyecto**: 🔧 En desarrollo — Ya terminado la navegación principal, pantalla Precio en tiempo real y menú dinámico desde Firestore
+
+---
+
+## 📌 Estado actual del código (Módulo 1)
+
+### Integraciones y pantallas
+
+- Autenticación con Firebase Auth:
+  - Inicio de sesión: `src/presentation/screens/LoginScreen.js`
+  - Recuperación de contraseña: `src/presentation/screens/RecoverPasswordScreen.js`
+  - Cierre de sesión desde el header del menú: `src/presentation/navigation/AppNavigator.js:31-39`
+- Navegación principal: `src/presentation/navigation/AppNavigator.js`
+  - Registro de pantallas: Login, RecuperarClave, Menu, Mapa y Precio
+  - Import de pantalla Precio: `src/presentation/navigation/AppNavigator.js:7`
+  - Registro de ruta Precio: `src/presentation/navigation/AppNavigator.js:57`
+- Menú con datos en tiempo real desde Firestore: `src/presentation/screens/MenuScreen.js`
+  - Suscripción al documento `config/menu`: `src/presentation/screens/MenuScreen.js:27-39`
+  - Ítems con acciones `navigate`, `link` y `noop`
+  - Apertura de Google Maps para “Como llegar”: `src/presentation/screens/MenuScreen.js:14`
+- Pantalla de Precio en tiempo real: `src/presentation/screens/PrecioScreen.js`
+  - Suscripción al documento `config/pricing`: `src/presentation/screens/PrecioScreen.js:12-28`
+  - Admite `priceCents` (entero en centavos) o `pricing` (decimal en USD)
+  - UI mejorada con `react-native-paper` y `@expo/vector-icons`
+
+### Adaptadores y configuración Firebase
+
+- Configuración central de Firebase: `src/config/firebase.config.js:5-29`
+  - Lee claves desde `expo.extra` en `app.json` o variables de entorno `EXPO_PUBLIC_FIREBASE_*` / `FIREBASE_*`
+- Adaptadores:
+  - Auth: `src/infrastructure/firebase/AuthAdapter.js` (expone `auth`)
+  - Firestore: `src/infrastructure/firebase/FirestoreAdapter.js` (expone `db`)
+  - Storage: `src/infrastructure/firebase/StorageAdapter.js` (expone `storage`)
+
+---
+
+## 🗄️ Esquemas de datos en Firestore
+
+### Precio
+
+- Ruta: colección `config`, documento `pricing`
+- Campos soportados por la app:
+  - `priceCents`: Número entero en centavos (recomendado), ejemplo: `50` → muestra `0.50`
+  - `pricing`: Número decimal en USD (alternativo), ejemplo: `0.5` → convierte a `50` centavos
+
+Ejemplo:
+
+```json
+{
+  "priceCents": 50
+}
+```
+
+### Menú
+
+- Ruta: colección `config`, documento `menu`
+- Campo: `items` (Array de objetos)
+- Estructura de cada item:
+  - `key`: String único (ej. `precio`, `ruta`)
+  - `label`: Texto visible (ej. `Precio hora`)
+  - `icon`: Nombre `MaterialIcons` (ej. `attach-money`)
+  - `type`: `navigate` | `link` | `noop`
+  - `value`: String (ruta de navegación o URL según `type`)
+  - `order`: Número para orden (opcional)
+  - `enabled`: Boolean para activar/desactivar (opcional)
+
+Ejemplo:
+
+```json
+{
+  "items": [
+    { "key": "precio", "label": "Precio hora", "icon": "attach-money", "type": "navigate", "value": "Precio", "order": 1, "enabled": true },
+    { "key": "plazas", "label": "Plazas disponibles", "icon": "local-parking", "type": "noop", "order": 2, "enabled": true },
+    { "key": "ingresar", "label": "Ingresar", "icon": "login", "type": "noop", "order": 3, "enabled": true },
+    { "key": "salir", "label": "Salir", "icon": "logout", "type": "noop", "order": 4, "enabled": true },
+    { "key": "servicios", "label": "Servicios", "icon": "miscellaneous-services", "type": "noop", "order": 5, "enabled": true },
+    { "key": "ruta", "label": "Como llegar", "icon": "directions", "type": "link", "value": "https://www.google.com/maps/place/0%C2%B018'02.6%22S+78%C2%B032'55.1%22W/@-0.3007016,-78.5512209,755m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-0.300707!4d-78.548646?entry=ttu&g_ep=EgoyMDI1MTExNy4wIKXMDSoASAFQAw%3D%3D", "order": 6, "enabled": true }
+  ]
+}
+```
+
+---
+
+## 🔒 Reglas recomendadas de Firestore
+
+Permitir lectura pública de `config/menu` y `config/pricing` y escritura solo autenticada:
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /config/pricing {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /config/menu {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}
+```
+
+---
+
+## ⚙️ Configuración de Firebase (Expo)
+
+- Completa las claves en `app.json` → `expo.extra`:
+
+```json
+{
+  "expo": {
+    "extra": {
+      "FIREBASE_API_KEY": "...",
+      "FIREBASE_AUTH_DOMAIN": "...",
+      "FIREBASE_PROJECT_ID": "...",
+      "FIREBASE_STORAGE_BUCKET": "...",
+      "FIREBASE_MESSAGING_SENDER_ID": "...",
+      "FIREBASE_APP_ID": "..."
+    }
+  }
+}
+```
+
+- La app usa estas claves: `src/config/firebase.config.js:5-29`
+- Alternativamente, define `EXPO_PUBLIC_FIREBASE_*` en tu entorno.
+
+---
+
+## 🧭 Navegación y comportamiento
+
+- Menú: obtiene ítems desde Firestore y reacciona en tiempo real: `src/presentation/screens/MenuScreen.js:27-39`
+- Precio: muestra tarifa con UI mejorada y suscripción en tiempo real: `src/presentation/screens/PrecioScreen.js:12-28`
+- Mapa: disponible como pantalla base: `src/presentation/navigation/AppNavigator.js:56`
+- Acceso a Maps: `src/presentation/screens/MenuScreen.js:14`
+
+---
+
+## 🚀 Prueba rápida
+
+1. Configura `app.json` con tus claves de Firebase.
+2. En Firestore:
+   - Crea `config/pricing` con `{ priceCents: 50 }`.
+   - Crea `config/menu` con el `items` del ejemplo.
+3. Inicia el proyecto con Expo y abre la app.
+4. En Firestore, cambia `priceCents` a `60` y verifica “Precio hora” en tiempo real.
+5. Edita `config/menu.items` (por ejemplo `label` u `order`) y confirma que el menú se actualiza al instante.
