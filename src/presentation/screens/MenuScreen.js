@@ -8,10 +8,10 @@ import { doc, onSnapshot } from 'firebase/firestore';
 export default function MenuScreen({ navigation }) {
   const defaultFeatures = [
     { key: 'precio', label: 'Precio hora', icon: 'attach-money', type: 'navigate', value: 'Precio' },
-    { key: 'plazas', label: 'Plazas disponibles', icon: 'local-parking', type: 'noop' },
+    { key: 'plazas', label: 'Plazas disponibles', icon: 'local-parking', type: 'navigate', value: 'Plazas' },
     { key: 'ingresar', label: 'Ingresar', icon: 'login', type: 'noop' },
     { key: 'salir', label: 'Salir', icon: 'logout', type: 'noop' },
-    { key: 'servicios', label: 'Servicios', icon: 'miscellaneous-services', type: 'noop' },
+    { key: 'servicios', label: 'Servicios', icon: 'miscellaneous-services', type: 'navigate', value: 'Servicios' },
     { key: 'ruta', label: 'Como llegar', icon: 'directions', type: 'link', value: "https://www.google.com/maps/place/0%C2%B018'02.6%22S+78%C2%B032'55.1%22W/@-0.3007016,-78.5512209,755m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-0.300707!4d-78.548646?entry=ttu&g_ep=EgoyMDI1MTExNy4wIKXMDSoASAFQAw%3D%3D" },
   ];
   const [features, setFeatures] = useState(defaultFeatures.map(i => ({
@@ -26,12 +26,15 @@ export default function MenuScreen({ navigation }) {
     const unsub = onSnapshot(ref, s => {
       const items = (s.data()?.items || []).filter(x => x.enabled !== false);
       const sorted = items.sort((a, b) => (a.order || 0) - (b.order || 0));
-      const mapped = sorted.map(i => ({
-        key: i.key,
-        label: i.label,
-        icon: i.icon,
-        onPress: () => i.type === 'navigate' ? navigation.navigate(i.value) : i.type === 'link' ? Linking.openURL(i.value) : null,
-      }));
+      const mapped = sorted.map(i => {
+        const target = i.value || (i.key === 'precio' ? 'Precio' : i.key === 'plazas' ? 'Plazas' : i.key === 'servicios' ? 'Servicios' : null);
+        return {
+          key: i.key,
+          label: i.label,
+          icon: i.icon,
+          onPress: () => i.type === 'navigate' && target ? navigation.navigate(target) : i.type === 'link' ? Linking.openURL(i.value) : null,
+        };
+      });
       setFeatures(mapped.length ? mapped : defaultFeatures.map(i => ({
         key: i.key,
         label: i.label,

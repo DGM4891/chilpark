@@ -5,6 +5,8 @@ import LoginScreen from '../screens/LoginScreen';
 import MenuScreen from '../screens/MenuScreen';
 import MapScreen from '../screens/MapScreen';
 import PrecioScreen from '../screens/PrecioScreen';
+import PlazasDisponiblesScreen from '../screens/PlazasDisponiblesScreen';
+import ServiciosScreen from '../screens/ServiciosScreen';
 import RecoverPasswordScreen from '../screens/RecoverPasswordScreen';
 import { Avatar, Menu, Divider } from 'react-native-paper';
 import { signOut } from 'firebase/auth';
@@ -55,6 +57,8 @@ export default function AppNavigator() {
       />
       <Stack.Screen name="Mapa" component={MapScreen} />
       <Stack.Screen name="Precio" component={PrecioScreen} options={{ title: 'Precio hora' }} />
+      <Stack.Screen name="Plazas" component={PlazasDisponiblesScreen} options={{ title: 'Plazas disponibles' }} />
+      <Stack.Screen name="Servicios" component={ServiciosScreen} options={{ title: 'Servicios' }} />
     </Stack.Navigator>
   );
 }
