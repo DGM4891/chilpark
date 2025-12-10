@@ -205,7 +205,10 @@ parking-app/
 │   │   │   ├── ParkingDetailScreen.js
 │   │   │   ├── VehicleRegistrationScreen.js
 │   │   │   ├── QRScreen.js
-│   │   │   └── HistoryScreen.js
+│   │   │   ├── HistoryScreen.js
+│   │   │   ├── IngresoScreen.js    # Nuevo
+│   │   │   ├── SalidaScreen.js     # Nuevo
+│   │   │   └── ...
 │   │   ├── components/
 │   │   │   ├── ParkingCard.js
 │   │   │   ├── MapMarker.js
@@ -245,11 +248,12 @@ parking-app/
 - Creación de wireframes
 - Configuración del entorno de desarrollo
 
-### Módulo 3-4: Desarrollo del MVP
-- Implementación de registro de vehículos
-- Sistema de ingreso/salida
-- Cálculo básico de tarifas
-- Integración con base de datos
+### Módulo 3-4: Desarrollo del MVP ✅
+- Implementación de registro de vehículos (Ingreso/Salida)
+- Sistema de ingreso/salida con QR
+- Cálculo básico de tarifas en tiempo real
+- Integración con base de datos Firestore
+- Manejo de estado de plazas (ocupadas/disponibles)
 
 ### Módulo 5-6: Funcionalidades Avanzadas
 - Mapa interactivo
@@ -346,106 +350,102 @@ Para consultas sobre el proyecto:
 
 ---
 
-**Última actualización**: 23 de noviembre de 2025
+**Última actualización**: 10 de diciembre de 2025
 
-**Estado del proyecto**: 🔧 En desarrollo — Ya terminado la navegación principal, pantalla Precio en tiempo real y menú dinámico desde Firestore
+**Estado del proyecto**: 🔧 En desarrollo — Implementado flujo completo de Ingreso, Salida, Tarifas y Menú Dinámico.
 
 ---
 
-## 📌 Estado actual del código (Módulo 1)
+## 📌 Estado actual del código (Módulo 1 y 2)
+
+### 🛠️ Mejoras Técnicas Recientes (v1.1)
+- **Normalización de Datos**: Implementación de conversión automática a mayúsculas para placas y nombres, garantizando consistencia en las búsquedas (Case Insensitive).
+- **Validaciones Robustas**:
+  - Algoritmo de validación de Cédula Ecuatoriana (Módulo 10).
+  - Prevención de doble ingreso: Verificación de estado 'activo' antes de permitir un nuevo registro.
+- **Corrección de Navegación**: Solución al problema de enrutamiento en `MenuScreen` asegurando la redirección correcta a 'Salida' y 'Ingreso' independientemente de la configuración en Firestore.
+- **Transacciones Atómicas**: Uso de `runTransaction` de Firestore para gestionar el contador de plazas y la creación de registros simultáneamente, evitando condiciones de carrera.
 
 ### Integraciones y pantallas
 
-- Autenticación con Firebase Auth:
+- **Autenticación con Firebase Auth**:
   - Inicio de sesión: `src/presentation/screens/LoginScreen.js`
   - Recuperación de contraseña: `src/presentation/screens/RecoverPasswordScreen.js`
-  - Cierre de sesión desde el header del menú: `src/presentation/navigation/AppNavigator.js:31-39`
-- Navegación principal: `src/presentation/navigation/AppNavigator.js`
-  - Registro de pantallas: Login, RecuperarClave, Menu, Mapa y Precio
-  - Import de pantalla Precio: `src/presentation/navigation/AppNavigator.js:7`
-  - Registro de ruta Precio: `src/presentation/navigation/AppNavigator.js:57`
-- Menú con datos en tiempo real desde Firestore: `src/presentation/screens/MenuScreen.js`
-  - Suscripción al documento `config/menu`: `src/presentation/screens/MenuScreen.js:27-39`
-  - Ítems con acciones `navigate`, `link` y `noop`
-  - Apertura de Google Maps para “Como llegar”: `src/presentation/screens/MenuScreen.js:14`
-- Pantalla de Precio en tiempo real: `src/presentation/screens/PrecioScreen.js`
-  - Suscripción al documento `config/pricing`: `src/presentation/screens/PrecioScreen.js:12-28`
-  - Admite `priceCents` (entero en centavos) o `pricing` (decimal en USD)
-  - UI mejorada con `react-native-paper` y `@expo/vector-icons`
+  - Cierre de sesión desde el header del menú: `src/presentation/navigation/AppNavigator.js`
+- **Navegación principal**: `src/presentation/navigation/AppNavigator.js`
+  - Stack Navigator gestionando: Login, RecuperarClave, Menu, Mapa, Precio, Plazas, Servicios, Ingreso, Salida.
+- **Menú Dinámico**: `src/presentation/screens/MenuScreen.js`
+  - Configuración en tiempo real desde Firestore (`config/menu`).
+  - Navegación robusta con autocorrección de rutas para Ingreso y Salida.
+- **Módulo de Ingreso**: `src/presentation/screens/IngresoScreen.js`
+  - Formulario con validación de Cédula Ecuatoriana y Placa.
+  - Verificación de duplicados (vehículo/persona ya dentro).
+  - Transacciones atómicas en Firestore para asegurar consistencia.
+  - Generación de código QR de ingreso.
+  - Actualización en tiempo real del contador de plazas.
+- **Módulo de Salida**: `src/presentation/screens/SalidaScreen.js`
+  - Búsqueda de vehículos por placa (insensible a mayúsculas/minúsculas).
+  - Cálculo automático de tarifa basado en tiempo de permanencia (horas o fracción).
+  - Generación de código QR de salida con resumen de pago.
+  - Cierre de ticket y liberación de plaza en Firestore.
+- **Plazas Disponibles**: `src/presentation/screens/PlazasDisponiblesScreen.js`
+  - Visualización en tiempo real de la ocupación del parqueadero.
+- **Precio en tiempo real**: `src/presentation/screens/PrecioScreen.js`
+  - Visualización de la tarifa actual configurada en el sistema.
 
 ### Adaptadores y configuración Firebase
 
-- Configuración central de Firebase: `src/config/firebase.config.js:5-29`
-  - Lee claves desde `expo.extra` en `app.json` o variables de entorno `EXPO_PUBLIC_FIREBASE_*` / `FIREBASE_*`
-- Adaptadores:
-  - Auth: `src/infrastructure/firebase/AuthAdapter.js` (expone `auth`)
-  - Firestore: `src/infrastructure/firebase/FirestoreAdapter.js` (expone `db`)
-  - Storage: `src/infrastructure/firebase/StorageAdapter.js` (expone `storage`)
+- Configuración central de Firebase: `src/config/firebase.config.js`
+- Adaptadores: `AuthAdapter`, `FirestoreAdapter`, `StorageAdapter` en `src/infrastructure/firebase/`
 
 ---
 
 ## 🗄️ Esquemas de datos en Firestore
 
 ### Precio
-
-- Ruta: colección `config`, documento `pricing`
-- Campos soportados por la app:
-  - `priceCents`: Número entero en centavos (recomendado), ejemplo: `50` → muestra `0.50`
-  - `pricing`: Número decimal en USD (alternativo), ejemplo: `0.5` → convierte a `50` centavos
-
-Ejemplo:
-
-```json
-{
-  "priceCents": 50
-}
-```
+- Ruta: `config/pricing`
+- Campos: `priceCents` (entero, centavos) o `pricing` (decimal, USD).
 
 ### Menú
+- Ruta: `config/menu`
+- Campos: `items` (Array).
+- Estructura: `{ key, label, icon, type, value, order, enabled }`
+- Claves especiales: `ingresar`, `salir` (autodetectadas por la app).
 
-- Ruta: colección `config`, documento `menu`
-- Campo: `items` (Array de objetos)
-- Estructura de cada item:
-  - `key`: String único (ej. `precio`, `ruta`)
-  - `label`: Texto visible (ej. `Precio hora`)
-  - `icon`: Nombre `MaterialIcons` (ej. `attach-money`)
-  - `type`: `navigate` | `link` | `noop`
-  - `value`: String (ruta de navegación o URL según `type`)
-  - `order`: Número para orden (opcional)
-  - `enabled`: Boolean para activar/desactivar (opcional)
+### Plazas
+- Ruta: `config/plazas`
+- Campos:
+  - `available`: Plazas disponibles (Number).
+  - `ocupadas`: Plazas ocupadas (Number).
+  - `total`: Capacidad total (Number).
 
-Ejemplo:
-
-```json
-{
-  "items": [
-    { "key": "precio", "label": "Precio hora", "icon": "attach-money", "type": "navigate", "value": "Precio", "order": 1, "enabled": true },
-    { "key": "plazas", "label": "Plazas disponibles", "icon": "local-parking", "type": "noop", "order": 2, "enabled": true },
-    { "key": "ingresar", "label": "Ingresar", "icon": "login", "type": "noop", "order": 3, "enabled": true },
-    { "key": "salir", "label": "Salir", "icon": "logout", "type": "noop", "order": 4, "enabled": true },
-    { "key": "servicios", "label": "Servicios", "icon": "miscellaneous-services", "type": "noop", "order": 5, "enabled": true },
-    { "key": "ruta", "label": "Como llegar", "icon": "directions", "type": "link", "value": "https://www.google.com/maps/place/0%C2%B018'02.6%22S+78%C2%B032'55.1%22W/@-0.3007016,-78.5512209,755m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-0.300707!4d-78.548646?entry=ttu&g_ep=EgoyMDI1MTExNy4wIKXMDSoASAFQAw%3D%3D", "order": 6, "enabled": true }
-  ]
-}
-```
+### Ingresos
+- Ruta: `ingresos/{documentId}`
+- Campos:
+  - `placa`: Placa del vehículo (String, Mayúsculas).
+  - `cedula`: Cédula del conductor (String).
+  - `nombres`: Nombre del conductor (String).
+  - `fechaIngreso`: Timestamp.
+  - `estado`: 'activo' | 'finalizado'.
+  - `fechaSalida`: Timestamp (al salir).
+  - `horasCobradas`: Number (al salir).
+  - `totalPagado`: Number (centavos, al salir).
+  - `tarifaAplicada`: Number (centavos, al salir).
 
 ---
 
 ## 🔒 Reglas recomendadas de Firestore
 
-Permitir lectura pública de `config/menu` y `config/pricing` y escritura solo autenticada:
-
 ```
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /config/pricing {
+    match /config/{document=**} {
       allow read: if true;
       allow write: if request.auth != null;
     }
-    match /config/menu {
-      allow read: if true;
-      allow write: if request.auth != null;
+    match /ingresos/{document=**} {
+      allow read, write: if true; // Ajustar a solo auth en producción
     }
   }
 }
@@ -455,43 +455,20 @@ service cloud.firestore {
 
 ## ⚙️ Configuración de Firebase (Expo)
 
-- Completa las claves en `app.json` → `expo.extra`:
-
-```json
-{
-  "expo": {
-    "extra": {
-      "FIREBASE_API_KEY": "...",
-      "FIREBASE_AUTH_DOMAIN": "...",
-      "FIREBASE_PROJECT_ID": "...",
-      "FIREBASE_STORAGE_BUCKET": "...",
-      "FIREBASE_MESSAGING_SENDER_ID": "...",
-      "FIREBASE_APP_ID": "..."
-    }
-  }
-}
-```
-
-- La app usa estas claves: `src/config/firebase.config.js:5-29`
-- Alternativamente, define `EXPO_PUBLIC_FIREBASE_*` en tu entorno.
+- Claves en `app.json` → `expo.extra` o variables de entorno.
 
 ---
 
 ## 🧭 Navegación y comportamiento
 
-- Menú: obtiene ítems desde Firestore y reacciona en tiempo real: `src/presentation/screens/MenuScreen.js:27-39`
-- Precio: muestra tarifa con UI mejorada y suscripción en tiempo real: `src/presentation/screens/PrecioScreen.js:12-28`
-- Mapa: disponible como pantalla base: `src/presentation/navigation/AppNavigator.js:56`
-- Acceso a Maps: `src/presentation/screens/MenuScreen.js:14`
+- **Flujo de Ingreso**: Menú -> Ingresar -> Formulario -> QR -> Menú.
+- **Flujo de Salida**: Menú -> Salir -> Formulario -> QR + Pago -> Menú.
+- **Validaciones**: Cédula ecuatoriana, Placa única activa, Plazas disponibles > 0.
 
 ---
 
 ## 🚀 Prueba rápida
 
 1. Configura `app.json` con tus claves de Firebase.
-2. En Firestore:
-   - Crea `config/pricing` con `{ priceCents: 50 }`.
-   - Crea `config/menu` con el `items` del ejemplo.
-3. Inicia el proyecto con Expo y abre la app.
-4. En Firestore, cambia `priceCents` a `60` y verifica “Precio hora” en tiempo real.
-5. Edita `config/menu.items` (por ejemplo `label` u `order`) y confirma que el menú se actualiza al instante.
+2. En Firestore, crea las colecciones `config` (menu, pricing, plazas).
+3. Inicia la app y prueba el flujo completo de Ingreso y Salida.

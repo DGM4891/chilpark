@@ -9,8 +9,8 @@ export default function MenuScreen({ navigation }) {
   const defaultFeatures = [
     { key: 'precio', label: 'Precio hora', icon: 'attach-money', type: 'navigate', value: 'Precio' },
     { key: 'plazas', label: 'Plazas disponibles', icon: 'local-parking', type: 'navigate', value: 'Plazas' },
-    { key: 'ingresar', label: 'Ingresar', icon: 'login', type: 'noop' },
-    { key: 'salir', label: 'Salir', icon: 'logout', type: 'noop' },
+    { key: 'ingresar', label: 'Ingresar', icon: 'login', type: 'navigate', value: 'Ingreso' },
+    { key: 'salir', label: 'Salir', icon: 'logout', type: 'navigate', value: 'Salida' },
     { key: 'servicios', label: 'Servicios', icon: 'miscellaneous-services', type: 'navigate', value: 'Servicios' },
     { key: 'ruta', label: 'Como llegar', icon: 'directions', type: 'link', value: "https://www.google.com/maps/place/0%C2%B018'02.6%22S+78%C2%B032'55.1%22W/@-0.3007016,-78.5512209,755m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-0.300707!4d-78.548646?entry=ttu&g_ep=EgoyMDI1MTExNy4wIKXMDSoASAFQAw%3D%3D" },
   ];
@@ -27,12 +27,33 @@ export default function MenuScreen({ navigation }) {
       const items = (s.data()?.items || []).filter(x => x.enabled !== false);
       const sorted = items.sort((a, b) => (a.order || 0) - (b.order || 0));
       const mapped = sorted.map(i => {
-        const target = i.value || (i.key === 'precio' ? 'Precio' : i.key === 'plazas' ? 'Plazas' : i.key === 'servicios' ? 'Servicios' : null);
+        let target = (i.value || '').trim();
+        let type = (i.type || '').trim();
+
+        // Force correct screen names for known keys to avoid Firestore config errors
+        if (i.key === 'precio') { target = 'Precio'; type = 'navigate'; }
+        else if (i.key === 'plazas') { target = 'Plazas'; type = 'navigate'; }
+        else if (i.key === 'servicios') { target = 'Servicios'; type = 'navigate'; }
+        else if (i.key === 'ingresar') { target = 'Ingreso'; type = 'navigate'; }
+        else if (i.key === 'salir') { target = 'Salida'; type = 'navigate'; }
+
         return {
           key: i.key,
           label: i.label,
           icon: i.icon,
-          onPress: () => i.type === 'navigate' && target ? navigation.navigate(target) : i.type === 'link' ? Linking.openURL(i.value) : null,
+          onPress: () => {
+            console.log(`Menu item pressed: ${i.key}, type: ${type}, target: ${target}`);
+            if (type === 'navigate' && target) {
+              try {
+                navigation.navigate(target);
+              } catch (err) {
+                console.error('Navigation error:', err);
+                alert(`Error al navegar a ${target}`);
+              }
+            } else if (type === 'link') {
+              Linking.openURL(i.value);
+            }
+          },
         };
       });
       setFeatures(mapped.length ? mapped : defaultFeatures.map(i => ({

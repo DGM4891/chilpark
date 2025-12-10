@@ -7,6 +7,8 @@ import MapScreen from '../screens/MapScreen';
 import PrecioScreen from '../screens/PrecioScreen';
 import PlazasDisponiblesScreen from '../screens/PlazasDisponiblesScreen';
 import ServiciosScreen from '../screens/ServiciosScreen';
+import IngresoScreen from '../screens/IngresoScreen';
+import SalidaScreen from '../screens/SalidaScreen';
 import RecoverPasswordScreen from '../screens/RecoverPasswordScreen';
 import { Avatar, Menu, Divider } from 'react-native-paper';
 import { signOut } from 'firebase/auth';
@@ -43,6 +45,7 @@ export default function AppNavigator() {
       </Menu>
     );
   };
+  // Ensure SalidaScreen is registered
   return (
     <Stack.Navigator initialRouteName="Login">
       <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
@@ -59,6 +62,8 @@ export default function AppNavigator() {
       <Stack.Screen name="Precio" component={PrecioScreen} options={{ title: 'Precio hora' }} />
       <Stack.Screen name="Plazas" component={PlazasDisponiblesScreen} options={{ title: 'Plazas disponibles' }} />
       <Stack.Screen name="Servicios" component={ServiciosScreen} options={{ title: 'Servicios' }} />
+      <Stack.Screen name="Ingreso" component={IngresoScreen} options={{ title: 'Registro de Ingreso' }} />
+      <Stack.Screen name="Salida" component={SalidaScreen} options={{ title: 'Registro de Salida' }} />
     </Stack.Navigator>
   );
 }
