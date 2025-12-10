@@ -206,8 +206,8 @@ parking-app/
 │   │   │   ├── VehicleRegistrationScreen.js
 │   │   │   ├── QRScreen.js
 │   │   │   ├── HistoryScreen.js
-│   │   │   ├── IngresoScreen.js    # Nuevo
-│   │   │   ├── SalidaScreen.js     # Nuevo
+│   │   │   ├── IngresoScreen.js
+│   │   │   ├── SalidaScreen.js
 │   │   │   └── ...
 │   │   ├── components/
 │   │   │   ├── ParkingCard.js
