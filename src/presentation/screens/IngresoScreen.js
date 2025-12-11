@@ -176,7 +176,7 @@ export default function IngresoScreen() {
         <TextInput
           label="Placa del Vehículo"
           value={placa}
-          onChangeText={setPlaca}
+          onChangeText={(text) => setPlaca(text.toUpperCase())}
           style={styles.input}
           mode="outlined"
           autoCapitalize="characters"
@@ -200,9 +200,10 @@ export default function IngresoScreen() {
         <TextInput
           label="Nombres Completos"
           value={nombres}
-          onChangeText={setNombres}
+          onChangeText={(text) => setNombres(text.toUpperCase())}
           style={styles.input}
           mode="outlined"
+          autoCapitalize="characters"
         />
 
         <Button 

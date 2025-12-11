@@ -170,6 +170,22 @@ A continuación se presentan los primeros wireframes del proyecto. Estas imágen
 
 ![Como llegar](wireframe/COMOLLEGAR.png)
 
+![Plazas disponibles](wireframe/PLAZASDISPONIBLES.png)
+
+![Registro de ingreso](wireframe/REGISTROINGRESO.png)
+
+![Registro de ingreso (QR)](wireframe/REGISTROINGRESOQR.png)
+
+![Validación de ingreso](wireframe/REGISTROINGRESOVALIDACION.png)
+
+![Registro de salida](wireframe/REGISTROSALIDA.png)
+
+![Registro de salida (QR)](wireframe/REGISTROSALIDAQR.png)
+
+![Validación de salida](wireframe/REGISTROSALIDAVALIDACION.png)
+
+![Servicios](wireframe/SERVICIOS.png)
+
 ---
 
 ## 📦 Estructura del Proyecto
