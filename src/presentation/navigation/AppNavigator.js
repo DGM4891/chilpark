@@ -7,6 +7,7 @@ import MapScreen from '../screens/MapScreen';
 import PrecioScreen from '../screens/PrecioScreen';
 import PlazasDisponiblesScreen from '../screens/PlazasDisponiblesScreen';
 import ServiciosScreen from '../screens/ServiciosScreen';
+import HistoryScreen from '../screens/HistoryScreen';
 import IngresoScreen from '../screens/IngresoScreen';
 import SalidaScreen from '../screens/SalidaScreen';
 import RecoverPasswordScreen from '../screens/RecoverPasswordScreen';
@@ -62,6 +63,7 @@ export default function AppNavigator() {
       <Stack.Screen name="Precio" component={PrecioScreen} options={{ title: 'Precio hora' }} />
       <Stack.Screen name="Plazas" component={PlazasDisponiblesScreen} options={{ title: 'Plazas disponibles' }} />
       <Stack.Screen name="Servicios" component={ServiciosScreen} options={{ title: 'Servicios' }} />
+      <Stack.Screen name="Historial" component={HistoryScreen} options={{ title: 'Historial de visitas' }} />
       <Stack.Screen name="Ingreso" component={IngresoScreen} options={{ title: 'Registro de Ingreso' }} />
       <Stack.Screen name="Salida" component={SalidaScreen} options={{ title: 'Registro de Salida' }} />
     </Stack.Navigator>

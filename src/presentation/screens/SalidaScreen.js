@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { TextInput, Button, Text, Surface, HelperText } from 'react-native-paper';
+import { TextInput, Button, Text, Surface, HelperText, RadioButton } from 'react-native-paper';
 import QRCode from 'react-native-qrcode-svg';
 import { db } from '../../infrastructure/firebase/FirestoreAdapter';
 import { runTransaction, doc, getDoc, collection, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
@@ -11,6 +11,16 @@ export default function SalidaScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [salidaData, setSalidaData] = useState(null);
   const [error, setError] = useState('');
+  const [showPayment, setShowPayment] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState(null);
+  const [bank, setBank] = useState(null);
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [cvv, setCvv] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
+  const [billing, setBilling] = useState(null);
 
   // Validar cédula ecuatoriana
   const validarCedulaEcuatoriana = (ci) => {
@@ -112,38 +122,7 @@ export default function SalidaScreen({ navigation }) {
       const totalCents = hoursToCharge * priceCents;
       const totalUsd = (totalCents / 100).toFixed(2);
 
-      // 3. Process transaction
-      await runTransaction(db, async (transaction) => {
-        const plazasRef = doc(db, 'config', 'plazas');
-        const plazasDoc = await transaction.get(plazasRef);
-
-        if (!plazasDoc.exists()) {
-          throw new Error('Configuración de plazas no encontrada');
-        }
-
-        const data = plazasDoc.data();
-        const currentAvailable = Number.isFinite(data.available) ? data.available : 100;
-        const currentOccupied = Number.isFinite(data.ocupadas) ? data.ocupadas : 0;
-
-        // Increment available spots, decrement occupied
-        const newAvailable = Math.min(data.total || 100, currentAvailable + 1);
-        const newOccupied = Math.max(0, currentOccupied - 1);
-        
-        transaction.update(plazasRef, { 
-          available: newAvailable,
-          ocupadas: newOccupied
-        });
-
-        // Update entry record
-        const ingresoRef = doc(db, 'ingresos', ingresoId);
-        transaction.update(ingresoRef, {
-          estado: 'finalizado',
-          fechaSalida: serverTimestamp(),
-          horasCobradas: hoursToCharge,
-          totalPagado: totalCents,
-          tarifaAplicada: priceCents
-        });
-      });
+      setBilling({ ingresoId, hoursToCharge, totalCents, priceCents });
 
       setSalidaData({
         placa: placaClean,
@@ -155,7 +134,7 @@ export default function SalidaScreen({ navigation }) {
           id: ingresoId,
           type: 'SALIDA',
           timestamp: fechaSalida.toISOString(),
-          status: 'PAID'
+          status: 'PENDING'
         })
       });
 
@@ -208,6 +187,186 @@ export default function SalidaScreen({ navigation }) {
           <View style={styles.qrContainer}>
             <QRCode value={salidaData.qrValue} size={180} />
           </View>
+
+          <Button
+            mode="contained"
+            style={[styles.button, { backgroundColor: '#1976D2' }]}
+            onPress={() => setShowPayment((prev) => !prev)}
+          >
+            {showPayment ? 'Ocultar Pago' : 'Pagar'}
+          </Button>
+
+          {showPayment && (
+            <View style={{ width: '100%', marginTop: 16 }}>
+              <Text style={styles.sectionTitle}>Método de pago</Text>
+              <RadioButton.Group onValueChange={setPaymentMethod} value={paymentMethod}>
+                <RadioButton.Item label="Tarjeta de crédito" value="credit" />
+                <RadioButton.Item label="Tarjeta de débito" value="debit" />
+                <RadioButton.Item label="Transferencia" value="transfer" />
+              </RadioButton.Group>
+
+              {(paymentMethod === 'credit' || paymentMethod === 'debit') && (
+                <View style={{ width: '100%', marginTop: 8 }}>
+                  <TextInput
+                    label="Número de tarjeta"
+                    value={cardNumber}
+                    onChangeText={setCardNumber}
+                    style={styles.input}
+                    mode="outlined"
+                    keyboardType="numeric"
+                  />
+                  <TextInput
+                    label="Fecha de expedición (MM/AA)"
+                    value={expiry}
+                    onChangeText={setExpiry}
+                    style={styles.input}
+                    mode="outlined"
+                  />
+                  <TextInput
+                    label="Código de seguridad"
+                    value={cvv}
+                    onChangeText={setCvv}
+                    style={styles.input}
+                    mode="outlined"
+                    keyboardType="numeric"
+                  />
+                  <Button
+                    mode="contained"
+                    style={[styles.button, { backgroundColor: '#388E3C' }]}
+                    onPress={async () => {
+                      setPaymentError('');
+                      if (!cardNumber || !expiry || !cvv) {
+                        setPaymentError('Complete todos los campos de la tarjeta');
+                        return;
+                      }
+                      try {
+                        setLoading(true);
+                        await runTransaction(db, async (transaction) => {
+                          const plazasRef = doc(db, 'config', 'plazas');
+                          const plazasDoc = await transaction.get(plazasRef);
+                          if (!plazasDoc.exists()) {
+                            throw new Error('Configuración de plazas no encontrada');
+                          }
+                          const data = plazasDoc.data();
+                          const currentAvailable = Number.isFinite(data.available) ? data.available : 100;
+                          const currentOccupied = Number.isFinite(data.ocupadas) ? data.ocupadas : 0;
+                          const newAvailable = Math.min(data.total || 100, currentAvailable + 1);
+                          const newOccupied = Math.max(0, currentOccupied - 1);
+                          transaction.update(plazasRef, { available: newAvailable, ocupadas: newOccupied });
+                          const ingresoRef = doc(db, 'ingresos', billing.ingresoId);
+                          transaction.update(ingresoRef, {
+                            estado: 'finalizado',
+                            fechaSalida: serverTimestamp(),
+                            horasCobradas: billing.hoursToCharge,
+                            totalPagado: billing.totalCents,
+                            tarifaAplicada: billing.priceCents,
+                          });
+                        });
+                        setPaymentSuccess(true);
+                        setSalidaData((prev) => ({
+                          ...prev,
+                          qrValue: JSON.stringify({
+                            id: billing.ingresoId,
+                            type: 'SALIDA',
+                            timestamp: new Date().toISOString(),
+                            status: 'PAID'
+                          })
+                        }));
+                      } catch (e) {
+                        setPaymentError('Error al procesar el pago');
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                  >
+                    Pagar
+                  </Button>
+                </View>
+              )}
+
+              {paymentMethod === 'transfer' && (
+                <View style={{ width: '100%', marginTop: 8 }}>
+                  <Text style={styles.sectionTitle}>Banco</Text>
+                  <RadioButton.Group onValueChange={setBank} value={bank}>
+                    <RadioButton.Item label="Pichincha" value="Pichincha" />
+                    <RadioButton.Item label="Guayaquil" value="Guayaquil" />
+                    <RadioButton.Item label="Produbanco" value="Produbanco" />
+                  </RadioButton.Group>
+                  <TextInput
+                    label="Número de cuenta"
+                    value={accountNumber}
+                    onChangeText={setAccountNumber}
+                    style={styles.input}
+                    mode="outlined"
+                    keyboardType="numeric"
+                  />
+                  <Button
+                    mode="contained"
+                    style={[styles.button, { backgroundColor: '#388E3C' }]}
+                    onPress={async () => {
+                      setPaymentError('');
+                      if (!bank || !accountNumber) {
+                        setPaymentError('Seleccione banco y número de cuenta');
+                        return;
+                      }
+                      try {
+                        setLoading(true);
+                        await runTransaction(db, async (transaction) => {
+                          const plazasRef = doc(db, 'config', 'plazas');
+                          const plazasDoc = await transaction.get(plazasRef);
+                          if (!plazasDoc.exists()) {
+                            throw new Error('Configuración de plazas no encontrada');
+                          }
+                          const data = plazasDoc.data();
+                          const currentAvailable = Number.isFinite(data.available) ? data.available : 100;
+                          const currentOccupied = Number.isFinite(data.ocupadas) ? data.ocupadas : 0;
+                          const newAvailable = Math.min(data.total || 100, currentAvailable + 1);
+                          const newOccupied = Math.max(0, currentOccupied - 1);
+                          transaction.update(plazasRef, { available: newAvailable, ocupadas: newOccupied });
+                          const ingresoRef = doc(db, 'ingresos', billing.ingresoId);
+                          transaction.update(ingresoRef, {
+                            estado: 'finalizado',
+                            fechaSalida: serverTimestamp(),
+                            horasCobradas: billing.hoursToCharge,
+                            totalPagado: billing.totalCents,
+                            tarifaAplicada: billing.priceCents,
+                          });
+                        });
+                        setPaymentSuccess(true);
+                        setSalidaData((prev) => ({
+                          ...prev,
+                          qrValue: JSON.stringify({
+                            id: billing.ingresoId,
+                            type: 'SALIDA',
+                            timestamp: new Date().toISOString(),
+                            status: 'PAID'
+                          })
+                        }));
+                      } catch (e) {
+                        setPaymentError('Error al procesar el pago');
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                  >
+                    Pagar
+                  </Button>
+                </View>
+              )}
+
+              {paymentError ? (
+                <HelperText type="error" visible={!!paymentError} style={{ marginTop: 8, textAlign: 'center' }}>
+                  {paymentError}
+                </HelperText>
+              ) : null}
+
+              {paymentSuccess ? (
+                <Text style={{ marginTop: 12, color: '#2e7d32', fontWeight: '700', textAlign: 'center' }}>
+                  !Tu Pago fue exitoso¡
+                </Text>
+              ) : null}
+            </View>
+          )}
         </Surface>
       </ScrollView>
     );
@@ -292,6 +451,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#D32F2F',
     marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 8,
   },
   instruction: {
     fontSize: 16,
