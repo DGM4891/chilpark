@@ -366,7 +366,7 @@ Para consultas sobre el proyecto:
 
 ---
 
-**Última actualización**: 10 de diciembre de 2025
+**Última actualización**: 12 de diciembre de 2025
 
 **Estado del proyecto**: 🔧 En desarrollo — Implementado flujo completo de Ingreso, Salida, Tarifas y Menú Dinámico.
 
@@ -374,13 +374,22 @@ Para consultas sobre el proyecto:
 
 ## 📌 Estado actual del código (Módulo 1 y 2)
 
-### 🛠️ Mejoras Técnicas Recientes (v1.1)
+### 🛠️ Mejoras Técnicas Recientes (v1.2)
 - **Normalización de Datos**: Implementación de conversión automática a mayúsculas para placas y nombres, garantizando consistencia en las búsquedas (Case Insensitive).
 - **Validaciones Robustas**:
   - Algoritmo de validación de Cédula Ecuatoriana (Módulo 10).
   - Prevención de doble ingreso: Verificación de estado 'activo' antes de permitir un nuevo registro.
 - **Corrección de Navegación**: Solución al problema de enrutamiento en `MenuScreen` asegurando la redirección correcta a 'Salida' y 'Ingreso' independientemente de la configuración en Firestore.
 - **Transacciones Atómicas**: Uso de `runTransaction` de Firestore para gestionar el contador de plazas y la creación de registros simultáneamente, evitando condiciones de carrera.
+- **Pago en Salida**:
+  - Nuevo flujo con selección de método: Tarjeta (crédito/débito) y Transferencia.
+  - La salida se marca como `finalizado` y libera plaza solo tras pago exitoso.
+  - QR con `status: 'PENDING'` antes de pagar y `status: 'PAID'` tras confirmar.
+  - Mensaje de confirmación: `!Tu Pago fue exitoso¡` centrado.
+- **Servicios y Historial**:
+  - Item “Historial de visitas” en Servicios con navegación a `Historial`.
+  - Layout de cards actualizado: valor y USD a la derecha para uniformidad.
+  - Pantalla `Historial` solicita cédula, valida formato ecuatoriano y lista visitas finalizadas (horas y total).
 
 ### Integraciones y pantallas
 
@@ -389,7 +398,7 @@ Para consultas sobre el proyecto:
   - Recuperación de contraseña: `src/presentation/screens/RecoverPasswordScreen.js`
   - Cierre de sesión desde el header del menú: `src/presentation/navigation/AppNavigator.js`
 - **Navegación principal**: `src/presentation/navigation/AppNavigator.js`
-  - Stack Navigator gestionando: Login, RecuperarClave, Menu, Mapa, Precio, Plazas, Servicios, Ingreso, Salida.
+  - Stack Navigator gestionando: Login, RecuperarClave, Menu, Mapa, Precio, Plazas, Servicios, Historial, Ingreso, Salida.
 - **Menú Dinámico**: `src/presentation/screens/MenuScreen.js`
   - Configuración en tiempo real desde Firestore (`config/menu`).
   - Navegación robusta con autocorrección de rutas para Ingreso y Salida.
@@ -403,11 +412,14 @@ Para consultas sobre el proyecto:
   - Búsqueda de vehículos por placa (insensible a mayúsculas/minúsculas).
   - Cálculo automático de tarifa basado en tiempo de permanencia (horas o fracción).
   - Generación de código QR de salida con resumen de pago.
-  - Cierre de ticket y liberación de plaza en Firestore.
+  - Flujo de pago con selección de método (Tarjeta/Transferencia).
+  - Cierre de ticket y liberación de plaza en Firestore sólo tras pago exitoso.
 - **Plazas Disponibles**: `src/presentation/screens/PlazasDisponiblesScreen.js`
   - Visualización en tiempo real de la ocupación del parqueadero.
 - **Precio en tiempo real**: `src/presentation/screens/PrecioScreen.js`
   - Visualización de la tarifa actual configurada en el sistema.
+ - **Historial de visitas**: `src/presentation/screens/HistoryScreen.js`
+   - Form con cédula validada; listado de visitas finalizadas con horas y total.
 
 ### Adaptadores y configuración Firebase
 
@@ -478,8 +490,9 @@ service cloud.firestore {
 ## 🧭 Navegación y comportamiento
 
 - **Flujo de Ingreso**: Menú -> Ingresar -> Formulario -> QR -> Menú.
-- **Flujo de Salida**: Menú -> Salir -> Formulario -> QR + Pago -> Menú.
+- **Flujo de Salida**: Menú -> Salir -> Formulario -> QR (PENDING) -> Pago -> QR (PAID) -> Menú.
 - **Validaciones**: Cédula ecuatoriana, Placa única activa, Plazas disponibles > 0.
+ - **Servicios**: Cards con valor y USD a la derecha; “Historial de visitas” sin precio.
 
 ---
 
