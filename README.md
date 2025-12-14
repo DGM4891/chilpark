@@ -186,6 +186,16 @@ A continuación se presentan los primeros wireframes del proyecto. Estas imágen
 
 ![Servicios](wireframe/SERVICIOS.png)
 
+![Métodos de pago](wireframe/METODOSPAGO.png)
+
+![Tarjetas](wireframe/TARJETAS.png)
+
+![Bancos](wireframe/BANCOS.png)
+
+![Pago exitoso](wireframe/PAGOEXITOSO.png)
+
+![Historial de visitas](wireframe/HISTORIALVISITAS.png)
+
 ---
 
 ## 📦 Estructura del Proyecto
